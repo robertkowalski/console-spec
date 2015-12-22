@@ -39,11 +39,11 @@ If the printing function gets multiple elements, it prints them separated by a s
   1. Call _formatter_ with _multipleArgs_:
     1. Let _target_ be the first element of _multipleArgs_.
     1. Let _current_ be the second element of _multipleArgs_.
-    1. Find the first format specifier from the left to the right in _target_.
+    1. Find the first possible format specifier from the left to the right in _target_.
       1. If it is `%s`, let _converted_ be the result of new String(_current_).
       1. If it is `%d` or `%i`, let _converted_ be the result of Number.parseInt(_current_, 10).
       1. If it is `%f`, let _converted_ be the result of  Number.parseFloat(_current_, 10).
-      1. Replace _current_ in _target_ with _converted_
+      1. Replace _current_ in _target_ with _converted_.
       1. Create _result_ which contains _target_ together with the elements of _multipleArgs_, but with _current_ removed.
     1. If _target_ does not have any format specifiers left, return _result_ and end the recursive function. Print the result. Abort the steps.
     1. If _result_ is just one element, return _result_ and end the recursive function. Print the result. Abort the steps.
