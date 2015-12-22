@@ -13,6 +13,7 @@ Logo: https://cdn.rawgit.com/terinjokes/console-spec/dd485319b0d0c918d954e0daafd
 !Participate: <a href="https://github.com/terinjokes/console-spec/issues/new">File an issue</a> (<a href="https://github.com/terinjokes/console-spec/issues?state=open">open issues</a>)
 !Participate: Send feedback to <a href="http://www.whatwg.org/mailing-list">whatwg@whatwg.org</a> (<a href="http://www.whatwg.org/mailing-list#specs">archives</a>)
 !Participate: <a href="http://wiki.whatwg.org/wiki/IRC">IRC: #whatwg on Freenode</a>
+Opaque Elements: emu-alg
 </pre>
 
 <h2 id="status" class="no-num no-toc">Status</h2>
@@ -21,19 +22,32 @@ As such, the term "Living Standard" indicates a goal, rather than reality.
 
 Please join us in the <a href="https://github.com/terinjokes/console-spec/issues?state=open">issue tracker</a> for more discussion.
 
-<h2 id="logger-function">Logger Function</h2>
+<h2 id="logger-function" nothrow>Logger(loglevel, ...multipleArgs)</h2>
 The logging function accepts datum and the logLevel, which is stored or displayed in a platform appropriate way.
 
+Each call of the Logger function prints a line which is ended by a newline.
 If the Logger function is called with no arguments, no output is written to the console.
-Each log entry from console.log gets an own line in the console.
-It is possible to pass format specifiers to the function in the first argument.
+If the printing function gets multiple elements, it prints them separated by a space. It is possible to pass format specifiers to the function as the element of the arguments that should get printed.
 
 <emu-alg>
-1. If no argument given, _log_ prints nothing to the console
-1. If at least one argument given, print it to the console on a new line
-2. If _arg1_ contains one or more format specifier, interpolate the string. Apply a type conversion to each argument following _arg1_ which matches the corresponding format specifier from left to right
-3. If there are more arguments than format specifiers, print them separated by a space
-3. If there are more format specifiers than given arguments, print the specifier
+  1. Let _firstElement_ be the first element of _multipleArgs_.
+  1. Let _rest_ be all elements following _firstElement_ in _multipleArgs_.
+  1. Let _formatter_ be a recursive function.
+  1. If no _firstElement_ given, do not print any output. Abort these steps.
+  1. If just _firstElement_ given, print _firstElement_ to the console. Abort these steps.
+  1. If _firstElement_ does not contain any format specifier, print _multipleArgs_ separated by one space to the console. Abort these steps.
+  1. Call _formatter_ with _multipleArgs_:
+    1. Let _target_ be the first element of _multipleArgs_.
+    1. Let _current_ be the second element of _multipleArgs_.
+    1. Find the first format specifier from the left to the right in _target_.
+      1. If it is `%s`, let _converted_ be the result of new String(_current_).
+      1. If it is `%d` or `%i`, let _converted_ be the result of Number.parseInt(_current_, 10).
+      1. If it is `%f`, let _converted_ be the result of  Number.parseFloat(_current_, 10).
+      1. Replace _current_ in _target_ with _converted_
+      1. Create _result_ which contains _target_ together with the elements of _multipleArgs_, but with _current_ removed.
+    1. If _target_ does not have any format specifiers left, return _result_ and end the recursive function. Print the result. Abort the steps.
+    1. If _result_ is just one element, return _result_ and end the recursive function. Print the result. Abort the steps.
+    1. Call _formatter_ with _result_ until it returns.
 </emu-alg>
 
 
