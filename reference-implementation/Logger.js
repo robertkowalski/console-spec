@@ -24,10 +24,17 @@ const hasSpecifier = new RegExp('(' + specifier.join('|') + ')');
 
 global.print = print;
 function print(logLevel, ...args) {
-  // for node writing to process.stdout works
-  // browser vendors add different colors to different types
-  // fall back to native console for now
-  console[logLevel].apply(this, args);
+
+  const message = args.join(' ');
+  if (logLevel === 'error') {
+    process.stderr.write(message + '\n');
+    return;
+  }
+
+  if (logLevel === 'log' || logLevel === 'info' || logLevel === 'warn') {
+    process.stdout.write(message + '\n');
+    return;
+  }
 }
 
 function Logger(logLevel, ...args) {
@@ -53,13 +60,6 @@ function maybeApplyFormatSpecifier(args) {
 }
 
 function format(args) {
-  if (!hasSpecifier.test(args[0])) {
-    return args;
-  }
-
-  if (args.length === 1) {
-    return args;
-  }
 
   const token = args[0].split('');
   let rest;
@@ -68,13 +68,22 @@ function format(args) {
     if (specifier.indexOf(token[i] + token[i + 1]) !== -1) {
       const formatter = getFormatter(token[i] + token[i + 1]);
 
-      result = args[0].replace(token[i] + token[i + 1], formatter(args[1]));
+      let formatted = args[0].replace(token[i] + token[i + 1], formatter(args[1]));
       rest = args.slice(2);
+      result = [formatted, ...rest];
       break;
     }
   }
 
-  return format([result, ...rest]);
+  if (!hasSpecifier.test(result)) {
+    return result;
+  }
+
+  if (result.length === 1) {
+    return result;
+  }
+
+  return format(result);
 }
 
 function getFormatter(specifier) {
